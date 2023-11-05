@@ -33,6 +33,10 @@ public class Main {
                 "Sergey", "Kovalev", LocalDate.of(1982, Month.DECEMBER, 21), orders, true);
 
 
-        System.out.println(parser.serialize(customer));
+        String serialized = parser.serialize(customer);
+        System.out.println(serialized);
+        System.out.println("-----------------------------------------------");
+
+        System.out.println(parser.beautifyOneLineString(serialized));
     }
 }

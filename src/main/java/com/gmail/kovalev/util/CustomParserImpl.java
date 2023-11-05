@@ -3,7 +3,6 @@ package com.gmail.kovalev.util;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CustomParserImpl implements CustomParser {
     @Override
@@ -22,7 +21,7 @@ public class CustomParserImpl implements CustomParser {
         return String.format("{%s}",serialized);
     }
 
-    private String parseField(Field field, Object object) throws IllegalAccessException {
+    public String parseField(Field field, Object object) throws IllegalAccessException {
         field.setAccessible(true);
         String nameOfField = field.getName();
         String value;
@@ -71,6 +70,53 @@ public class CustomParserImpl implements CustomParser {
             strings.add(string);
         }
         return "[" + String.join(",", strings) + "]";
+    }
+
+    @Override
+    public String beautifyOneLineString(String jsonStringOneLine) {
+        int howManySpaces = 4;
+        final char[] chars = jsonStringOneLine.toCharArray();
+        final String newLine = System.lineSeparator();
+
+        StringBuilder formattedStr = new StringBuilder();
+        boolean begin_quotes = false;
+
+        for (int i = 0, indent = 0; i < chars.length; i++) {
+            char c = chars[i];
+
+            if (c == '\"') {
+                formattedStr.append(c);
+                begin_quotes = !begin_quotes;
+                continue;
+            }
+
+            if (!begin_quotes) {
+                switch (c) {
+                    case '{', '[' -> {
+                        formattedStr.append(c).append(newLine).append(String.format("%" + (indent += howManySpaces) + "s", ""));
+                        continue;
+                    }
+                    case '}', ']' -> {
+                        formattedStr.append(newLine).append((indent -= howManySpaces) > 0 ? String.format("%" + indent + "s", "") : "").append(c);
+                        continue;
+                    }
+                    case ':' -> {
+                        formattedStr.append(c).append(" ");
+                        continue;
+                    }
+                    case ',' -> {
+                        formattedStr.append(c).append(newLine).append(indent > 0 ? String.format("%" + indent + "s", "") : "");
+                        continue;
+                    }
+                    default -> {
+                        if (Character.isWhitespace(c)) continue;
+                    }
+                }
+            }
+
+            formattedStr.append(c);
+        }
+        return formattedStr.toString();
     }
 
     @Override
