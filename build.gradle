@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "6.5.1"
+}
+
+group = 'by.clevertec'
+version = '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
