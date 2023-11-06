@@ -28,15 +28,24 @@ public class Main {
         Customer customer = new Customer(UUID.randomUUID(),
                 new Skill[]{
                         new Skill("Run", "Fast running"),
-                        new Skill("Sleep", "Deep sleeping")
+                        new Skill(null, "Deep sleeping")
                 },
                 "Sergey", "Kovalev", LocalDate.of(1982, Month.DECEMBER, 21), orders, true);
 
 
-        String serialized = parser.serialize(customer);
-        System.out.println(serialized);
+        String serializedOneLine = parser.serialize(customer);
+//        System.out.println(serializedOneLine);
         System.out.println("-----------------------------------------------");
 
-        System.out.println(parser.beautifyOneLineString(serialized));
+        String beautifulString = parser.beautifyOneLineString(serializedOneLine);
+        System.out.println(beautifulString);
+
+        parser.deserialize(beautifulString);
+
+//        String simpleJson = parser.serialize(new Skill("Run", "Fast running"));
+//        System.out.println(simpleJson);
+
+//        parser.deserialize(simpleJson);
+
     }
 }

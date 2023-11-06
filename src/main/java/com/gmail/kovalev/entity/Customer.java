@@ -16,5 +16,5 @@ public class Customer {
     private String lastName;
     private LocalDate dateBirth;
     private List<Order> orders;
-    private boolean isIdiot;
+    private boolean isWeird;
 }
