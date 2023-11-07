@@ -34,18 +34,16 @@ public class Main {
 
 
         String serializedOneLine = parser.serialize(customer);
-//        System.out.println(serializedOneLine);
+        System.out.println(serializedOneLine);
         System.out.println("-----------------------------------------------");
 
-        String beautifulString = parser.beautifyOneLineString(serializedOneLine);
-        System.out.println(beautifulString);
+        String beautifulJSON = parser.beautifyOneLineString(serializedOneLine);
+        System.out.println(beautifulJSON);
+        System.out.println("-----------------------------------------------");
 
-        parser.deserialize(beautifulString);
 
-//        String simpleJson = parser.serialize(new Skill("Run", "Fast running"));
-//        System.out.println(simpleJson);
+        parser.deserialize(beautifulJSON);
 
-//        parser.deserialize(simpleJson);
 
     }
 }
