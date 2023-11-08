@@ -1,10 +1,17 @@
 package com.gmail.kovalev.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class CustomParserImpl implements CustomParser {
     @Override
@@ -123,15 +130,118 @@ public class CustomParserImpl implements CustomParser {
     }
 
     @Override
-    public Object deserialize(String jsonString) {
+    public <T> T deserialize(String jsonString, Class<T> clazz) {
         String formatted = removeAllExtraWhitespaces(jsonString);
         Map<String, Object> map = new HashMap<>();
         parseJsonObject(formatted, map, "ROOT");
 
         System.out.println("----------------");
         map.entrySet().forEach(System.out::println);
+        T t;
+        try {
+            t = fromMapToObject(map, clazz, "ROOT");
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchFieldException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return t;
+    }
 
-        return null;
+    private <T> T fromMapToObject(Map<String, Object> map, Class<T> clazz, String mapLevel)
+            throws NoSuchMethodException, InvocationTargetException, InstantiationException,
+            IllegalAccessException, NoSuchFieldException, ClassNotFoundException {
+        Field[] declaredFields = clazz.getDeclaredFields();
+
+        T instance = clazz.getDeclaredConstructor().newInstance();
+
+        Map<String, Object> root = (Map<String, Object>) map.get(mapLevel);
+
+        for (Field field : declaredFields) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            Class<?> fieldType = field.getType();
+            if (fieldType == String.class) {
+                String value = (String) root.get(fieldName);
+                field.set(instance, value);
+            } else if (fieldType == boolean.class || fieldType == Boolean.class) {
+                boolean value = (boolean) root.get(fieldName);
+                field.set(instance, value);
+            } else if (fieldType == double.class || fieldType == Double.class) {
+                double value = Double.parseDouble((String) root.get(fieldName));
+                field.set(instance, value);
+            } else if (fieldType == int.class || fieldType == Integer.class) {
+                int value = (int) root.get(fieldName);
+                field.set(instance, value);
+            } else if (fieldType == float.class || fieldType == Float.class) {
+                float value = (float) root.get(fieldName);
+                field.set(instance, value);
+            } else if (fieldType == UUID.class) {
+                UUID value = UUID.fromString((String) root.get(fieldName));
+                field.set(instance, value);
+            } else if (fieldType == LocalDate.class) {
+                LocalDate value = LocalDate.parse((String) root.get(fieldName));
+                field.set(instance, value);
+            } else if (fieldType == OffsetDateTime.class) {
+                OffsetDateTime value = OffsetDateTime.parse((String) root.get(fieldName));
+                field.set(instance, value);
+            } else if (fieldType == List.class) {
+                List<T> fieldList = fillListWithInnerObjects(root, fieldName, instance);
+                field.set(instance, fieldList);
+            } else if (fieldType.getName().startsWith("[")) {
+                T[] array = fillArrayWithInnerObjects(root, fieldName, instance);
+                field.set(instance, array);
+            }
+        }
+        return instance;
+    }
+
+    private <T> T[] fillArrayWithInnerObjects(Map<String, Object> root, String fieldName, T instance)
+            throws NoSuchFieldException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        List<Object> innerList = (List<Object>) root.get(fieldName);
+        Field declaredField = instance.getClass().getDeclaredField(fieldName);
+
+        int arraySize = innerList.size();
+
+        String name = declaredField.getType().getName();
+        String subName = name.substring(2, name.length() - 1);
+        Class<?> paramClass = Class.forName(subName);
+
+        T[] array = (T[]) Array.newInstance(paramClass, arraySize);
+
+        for (int i = 0; i < arraySize; i++) {
+            Map<String, Object> innerMap = (Map<String, Object>) innerList.get(i);
+
+            T innerInstance = (T) fromMapToObject(innerMap, paramClass, "Object in List");
+            array[i] = innerInstance;
+        }
+        return array;
+    }
+
+    private <T> List<T> fillListWithInnerObjects(Map<String, Object> root, String fieldName, T instance)
+            throws NoSuchFieldException, NoSuchMethodException, InvocationTargetException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException {
+        List<Object> innerList = (List<Object>) root.get(fieldName);
+        Field declaredField = instance.getClass().getDeclaredField(fieldName);
+
+        Type genericType = declaredField.getGenericType();
+        ParameterizedType parameterizedType = (ParameterizedType) genericType;
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+
+        Class<?> paramClass = null;
+        for (Type type : actualTypeArguments) {
+            paramClass = (Class<?>) type;
+        }
+
+        List<T> fieldList = new ArrayList<>();
+
+        for (Object o : innerList) {
+            Map<String, Object> innerMap = (Map<String, Object>) o;
+
+            T innerInstance = (T) fromMapToObject(innerMap, paramClass, "Object in List");
+            fieldList.add(innerInstance);
+        }
+        return fieldList;
     }
 
     public void parseJsonObject(String jsonString, Map<String, Object> map, String key) {
@@ -196,10 +306,10 @@ public class CustomParserImpl implements CustomParser {
             map.put(key.toString(), list);
 
         } else if (sbPairList.charAt(0) == '\"') {
-            this.cutNextToken(sbPairList, ",", value);
-            System.out.println("found VALUE of type STRING:" + value);
+            cutNextToken(sbPairList, ",", value);
+            System.out.println("found VALUE of type STRING: " + value);
 
-            map.put(key.toString(), value);
+            map.put(key.toString(), value.toString());
 
         } else if (sbPairList.charAt(0) == 'n') {
             sbPairList.delete(0, 4);
@@ -267,10 +377,10 @@ public class CustomParserImpl implements CustomParser {
         int sepIndex = sourceString.indexOf(separator);
         if (sepIndex == -1) { // разделитель не найден, последний элемент списка
             token.setLength(0);
-            token.append(sourceString);
+            token.append(sourceString, 1, sourceString.length() - 1);
             sourceStringBuilder.setLength(0);
         } else {
-            String key = sourceString.substring(0, sepIndex);
+            String key = sourceString.substring(1, sepIndex - 1);
             String restOfString = sourceString.substring(sepIndex + separator.length());
             sourceStringBuilder.setLength(0);
             sourceStringBuilder.append(restOfString);

@@ -34,16 +34,30 @@ public class Main {
 
 
         String serializedOneLine = parser.serialize(customer);
-        System.out.println(serializedOneLine);
-        System.out.println("-----------------------------------------------");
+        System.out.printf("""
+                
+                ONE-LINE JSON BELLOW
+                -----------------------------------------------
+                %s
+                """, serializedOneLine);
+        System.out.println("--------------------------------------");
 
         String beautifulJSON = parser.beautifyOneLineString(serializedOneLine);
-        System.out.println(beautifulJSON);
-        System.out.println("-----------------------------------------------");
+        System.out.printf("""
+                
+                FORMATTED JSON BELLOW
+                -----------------------------------------------
+                %s
+                """, beautifulJSON);
+        System.out.println("--------------------------------------");
 
-
-        parser.deserialize(beautifulJSON);
-
-
+        Customer deserialized = parser.deserialize(beautifulJSON, Customer.class);
+        System.out.printf("""
+                
+                DESERIALIZED POJO BELLOW (toString())
+                -----------------------------------------------
+                %s
+                """, deserialized);
+        System.out.println("--------------------------------------");
     }
 }
