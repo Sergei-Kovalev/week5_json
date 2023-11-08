@@ -3,7 +3,7 @@ package com.gmail.kovalev.util;
 public interface CustomParser {
     String serialize(Object o) throws IllegalAccessException;
 
-    Object deserialize(String jsonString);
+    <T> T deserialize(String jsonString, Class<T> clazz);
 
     String beautifyOneLineString(String jsonString);
 }
