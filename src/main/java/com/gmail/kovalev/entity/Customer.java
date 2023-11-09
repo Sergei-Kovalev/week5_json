@@ -19,4 +19,5 @@ public class Customer {
     private LocalDate dateBirth;
     private List<Order> orders;
     private boolean isWeird;
+    private BonusCard bonusCard;
 }

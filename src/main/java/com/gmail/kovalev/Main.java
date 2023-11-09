@@ -1,5 +1,6 @@
 package com.gmail.kovalev;
 
+import com.gmail.kovalev.entity.BonusCard;
 import com.gmail.kovalev.entity.Customer;
 import com.gmail.kovalev.entity.Order;
 import com.gmail.kovalev.entity.Product;
@@ -30,7 +31,8 @@ public class Main {
                         new Skill("Run", "Fast running"),
                         new Skill(null, "Deep sleeping")
                 },
-                "Sergey", "Kovalev", LocalDate.of(1982, Month.DECEMBER, 21), orders, true);
+                "Sergey", "Kovalev", LocalDate.of(1982, Month.DECEMBER, 21),
+                orders, true, new BonusCard("89347529998743"));
 
 
         String serializedOneLine = parser.serialize(customer);

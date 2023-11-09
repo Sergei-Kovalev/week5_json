@@ -133,10 +133,9 @@ public class CustomParserImpl implements CustomParser {
     public <T> T deserialize(String jsonString, Class<T> clazz) {
         String formatted = removeAllExtraWhitespaces(jsonString);
         Map<String, Object> map = new HashMap<>();
+        System.out.println("LL parsing begin:");
         parseJsonObject(formatted, map, "ROOT");
 
-        System.out.println("----------------");
-        map.entrySet().forEach(System.out::println);
         T t;
         try {
             t = fromMapToObject(map, clazz, "ROOT");
@@ -170,10 +169,10 @@ public class CustomParserImpl implements CustomParser {
                 double value = Double.parseDouble((String) root.get(fieldName));
                 field.set(instance, value);
             } else if (fieldType == int.class || fieldType == Integer.class) {
-                int value = (int) root.get(fieldName);
+                int value = Integer.parseInt((String) root.get(fieldName));
                 field.set(instance, value);
             } else if (fieldType == float.class || fieldType == Float.class) {
-                float value = (float) root.get(fieldName);
+                float value = Float.parseFloat((String) root.get(fieldName));
                 field.set(instance, value);
             } else if (fieldType == UUID.class) {
                 UUID value = UUID.fromString((String) root.get(fieldName));
@@ -190,9 +189,21 @@ public class CustomParserImpl implements CustomParser {
             } else if (fieldType.getName().startsWith("[")) {
                 T[] array = fillArrayWithInnerObjects(root, fieldName, instance);
                 field.set(instance, array);
+            } else if (fieldType.getName().contains("com.gmail.kovalev.entity")) {
+                T innerInstance = fillInnerObjectFields(instance, fieldName, root);
+                field.set(instance, innerInstance);
             }
         }
         return instance;
+    }
+
+    private <T> T fillInnerObjectFields(T instance, String fieldName, Map<String, Object> root) throws NoSuchFieldException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        Field declaredField = instance.getClass().getDeclaredField(fieldName);
+        String name = declaredField.getType().getName();
+        Class<?> paramClass = Class.forName(name);
+
+        Map<String, Object> innerMap = (Map<String, Object>) root.get(fieldName);
+        return (T) fromMapToObject(innerMap, paramClass, "Inner object");
     }
 
     private <T> T[] fillArrayWithInnerObjects(Map<String, Object> root, String fieldName, T instance)
@@ -284,16 +295,17 @@ public class CustomParserImpl implements CustomParser {
         if (sbPairList.charAt(0) == '{') {
             cutTillMatchingParen(sbPairList, "{", "}", value);
             System.out.println("found VALUE of type OBJECT:" + value);
-            parseJsonObject(value.toString(), map, key.toString());                                          // import map
-            StringBuilder emptyString = new StringBuilder();
-            cutNextToken(sbPairList, ",", emptyString);
+
+            Map<String, Object> mapForInnerObject = new HashMap<>();
+            parseJsonObject(value.toString(), mapForInnerObject, "Inner object");
+            map.put(key.toString(), mapForInnerObject);
+
         } else if (sbPairList.charAt(0) == '[') {
             cutTillMatchingParen(sbPairList, "[", "]", value);
 
             System.out.println("found VALUE of type ArrayList<OBJECT>" + value);
 
             String arrayString = value.substring(1, value.length() - 1).trim();
-//            System.out.println(arrayString);
             List<String> stringsArray = splitByObjects(arrayString);
 
             List<Object> list = new ArrayList<>();
