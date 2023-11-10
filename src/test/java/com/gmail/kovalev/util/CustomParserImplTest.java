@@ -38,6 +38,7 @@ class CustomParserImplTest {
         gson = new Gson();
         prettyGson = new GsonBuilder()
                 .setPrettyPrinting()
+                .serializeNulls()
                 .create();
         gsonWithAdapter = new GsonBuilder()
                 .registerTypeAdapter(OffsetDateTime.class, (JsonSerializer<OffsetDateTime>) (value, type, context) ->
@@ -51,6 +52,7 @@ class CustomParserImplTest {
                         new JsonPrimitive(value.format(DateTimeFormatter.ISO_LOCAL_DATE)))
                 .registerTypeAdapter(LocalDate.class, (JsonDeserializer<LocalDate>) (value, type, context) ->
                         LocalDate.parse(value.getAsString()))
+                .serializeNulls()
                 .create();
         prettyGsonWithAdapter = new GsonBuilder()
                 .setPrettyPrinting()
@@ -59,6 +61,7 @@ class CustomParserImplTest {
                 )
                 .registerTypeAdapter(LocalDate.class, (JsonSerializer<LocalDate>) (value, type, context) ->
                         new JsonPrimitive(value.format(DateTimeFormatter.ISO_LOCAL_DATE)))
+                .serializeNulls()
                 .create();
     }
 
@@ -364,11 +367,11 @@ class CustomParserImplTest {
                                 )
                                 .build().buildCustomer()
                 ),
-//                Arguments.of(
-//                        CustomerTestData.builder()                // GSON как то странно обрабатывает null поля
-//                                .withBonusCard(null)              // он их просто не печатает
-//                                .build().buildCustomer()          // Десериализация проходит успешно
-//                ),
+                Arguments.of(
+                        CustomerTestData.builder()
+                                .withBonusCard(null)
+                                .build().buildCustomer()
+                ),
                 Arguments.of((Object) null)
         );
     }
