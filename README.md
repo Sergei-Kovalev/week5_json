@@ -21,6 +21,7 @@ ___
  - serialize(Object o) - производит сериализацию объекта.
  - beautifyOneLineString(String jsonString, int howManySpaces) - выводит JSON в "красивом" виде.
  - deserialize(String jsonString, Class<T> clazz) - производит десериализацию объекта.
+ - тесты находятся здесь: com/gmail/kovalev/util/CustomParserImplTest.java
 
 Пояснения по каждому методу:
 
