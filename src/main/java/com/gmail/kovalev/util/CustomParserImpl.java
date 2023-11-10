@@ -16,6 +16,10 @@ import java.util.UUID;
 public class CustomParserImpl implements CustomParser {
     @Override
     public String serialize(Object object) throws IllegalAccessException {
+        if (object == null) {
+            return "Yours Object is null. No sense to parse it!";
+        }
+
         List<String> fields = new ArrayList<>();
 
         Field[] declaredFields = object.getClass().getDeclaredFields();
@@ -43,7 +47,7 @@ public class CustomParserImpl implements CustomParser {
         } else {
             value = valueByFieldType(typeName, fieldObject);
         }
-        return String.format("\"%s\": %s", nameOfField, value);
+        return String.format("\"%s\":%s", nameOfField, value);
     }
 
     private String valueByFieldType(String typeName, Object fieldObject) throws IllegalAccessException {
@@ -83,8 +87,11 @@ public class CustomParserImpl implements CustomParser {
     }
 
     @Override
-    public String beautifyOneLineString(String jsonStringOneLine) {
-        int howManySpaces = 4;
+    public String beautifyOneLineString(String jsonStringOneLine, int howManySpaces) {
+        if (jsonStringOneLine == null || jsonStringOneLine.equals("Yours Object is null. No sense to parse it!")) {
+            return "Yours JSON string is null. No sense to parse it!";
+        }
+
         char[] chars = jsonStringOneLine.toCharArray();
         String newLine = System.lineSeparator();
 
@@ -131,6 +138,10 @@ public class CustomParserImpl implements CustomParser {
 
     @Override
     public <T> T deserialize(String jsonString, Class<T> clazz) {
+        if (jsonString == null || jsonString.isEmpty()) {
+            return null;
+        }
+
         String formatted = removeAllExtraWhitespaces(jsonString);
         Map<String, Object> map = new HashMap<>();
         System.out.println("LL parsing begin:");
@@ -190,8 +201,12 @@ public class CustomParserImpl implements CustomParser {
                 T[] array = fillArrayWithInnerObjects(root, fieldName, instance);
                 field.set(instance, array);
             } else if (fieldType.getName().contains("com.gmail.kovalev.entity")) {
-                T innerInstance = fillInnerObjectFields(instance, fieldName, root);
-                field.set(instance, innerInstance);
+                if (root != null) {
+                    T innerInstance = fillInnerObjectFields(instance, fieldName, root);
+                    field.set(instance, innerInstance);
+                } else {
+                    return null;
+                }
             }
         }
         return instance;
@@ -203,6 +218,9 @@ public class CustomParserImpl implements CustomParser {
         Class<?> paramClass = Class.forName(name);
 
         Map<String, Object> innerMap = (Map<String, Object>) root.get(fieldName);
+        if (innerMap == null) {
+            return null;
+        }
         return (T) fromMapToObject(innerMap, paramClass, "Inner object");
     }
 

@@ -1,6 +1,5 @@
 package com.gmail.kovalev;
 
-import com.gmail.kovalev.entity.BonusCard;
 import com.gmail.kovalev.entity.Customer;
 import com.gmail.kovalev.entity.Order;
 import com.gmail.kovalev.entity.Product;
@@ -32,21 +31,21 @@ public class Main {
                         new Skill(null, "Deep sleeping")
                 },
                 "Sergey", "Kovalev", LocalDate.of(1982, Month.DECEMBER, 21),
-                orders, true, new BonusCard("89347529998743"));
-
+                orders, true, null);
+//        new BonusCard("89347529998743")
 
         String serializedOneLine = parser.serialize(customer);
         System.out.printf("""
-                
+
                 ONE-LINE JSON BELLOW
                 -----------------------------------------------
                 %s
                 """, serializedOneLine);
         System.out.println("--------------------------------------");
 
-        String beautifulJSON = parser.beautifyOneLineString(serializedOneLine);
+        String beautifulJSON = parser.beautifyOneLineString(serializedOneLine, 4);
         System.out.printf("""
-                
+
                 FORMATTED JSON BELLOW
                 -----------------------------------------------
                 %s
@@ -55,7 +54,7 @@ public class Main {
 
         Customer deserialized = parser.deserialize(beautifulJSON, Customer.class);
         System.out.printf("""
-                
+
                 DESERIALIZED POJO BELLOW (toString())
                 -----------------------------------------------
                 %s

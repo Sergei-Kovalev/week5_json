@@ -5,5 +5,5 @@ public interface CustomParser {
 
     <T> T deserialize(String jsonString, Class<T> clazz);
 
-    String beautifyOneLineString(String jsonString);
+    String beautifyOneLineString(String jsonString, int howManySpaces);
 }
